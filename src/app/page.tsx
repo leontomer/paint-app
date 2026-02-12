@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 function generateRoomId(): string {
@@ -10,7 +10,11 @@ function generateRoomId(): string {
 export default function HomePage() {
   const router = useRouter();
   const [roomInput, setRoomInput] = useState("");
-  const suggested = useMemo(() => generateRoomId(), []);
+  const [suggested, setSuggested] = useState("");
+
+  useEffect(() => {
+    setSuggested(generateRoomId());
+  }, []);
 
   const goToRoom = (roomId: string) => {
     const normalized = roomId.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
@@ -26,7 +30,7 @@ export default function HomePage() {
   return (
     <main className="home">
       <section className="home-card">
-        <p className="eyebrow">Interview Task Ready</p>
+        <p className="eyebrow">Painting board</p>
         <h1>Realtime Collaborative Paint</h1>
         <p className="subtitle">
           Share a room link and draw together. Up to 10 users can paint simultaneously on the same board.
@@ -34,7 +38,7 @@ export default function HomePage() {
 
         <div className="home-actions">
           <button className="primary" onClick={() => goToRoom(suggested)} type="button">
-            Start New Room: {suggested}
+            Start New Room: {suggested || "......"}
           </button>
 
           <form onSubmit={handleJoin} className="join-form">
