@@ -32,3 +32,8 @@ export type SyncStateEvent = {
 export type RequestSyncEvent = {
   requesterId: string;
 };
+
+export type SegmentBatchEvent = {
+  authorId: string;
+  segments: DrawSegmentCommand[];
+};

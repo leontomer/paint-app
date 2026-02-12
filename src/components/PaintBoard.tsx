@@ -8,6 +8,7 @@ import type {
   ClearCanvasCommand,
   DrawSegmentCommand,
   RequestSyncEvent,
+  SegmentBatchEvent,
   SyncStateEvent,
   ToolMode
 } from "@/lib/types";
@@ -94,7 +95,8 @@ export default function PaintBoard({ roomId }: Props) {
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
   const channelRef = useRef<PresenceChannel | null>(null);
   const isSyncedRef = useRef(false);
-  const lastSentAtRef = useRef(0);
+  const pendingSegmentsRef = useRef<DrawSegmentCommand[]>([]);
+  const flushTimerRef = useRef<number | null>(null);
 
   const [{ id: userId, name: userName }] = useState(getUserIdentity);
   const [color, setColor] = useState(DEFAULT_COLOR);
@@ -119,6 +121,16 @@ export default function PaintBoard({ roomId }: Props) {
     if (!channel) return;
     channel.trigger(eventName, data);
   }, []);
+
+  const flushPendingSegments = useCallback(() => {
+    if (!pendingSegmentsRef.current.length) return;
+    const batch = pendingSegmentsRef.current;
+    pendingSegmentsRef.current = [];
+    emitEvent("client-segments", {
+      authorId: userId,
+      segments: batch
+    } satisfies SegmentBatchEvent);
+  }, [emitEvent, userId]);
 
   const applyCommand = useCallback((command: CanvasCommand) => {
     const canvas = canvasRef.current;
@@ -221,9 +233,11 @@ export default function PaintBoard({ roomId }: Props) {
       setParticipants(channel.members?.count ?? 1);
     });
 
-    channel.bind("client-segment", (command: DrawSegmentCommand) => {
-      if (command.authorId === userId) return;
-      applyCommand(command);
+    channel.bind("client-segments", (payload: SegmentBatchEvent) => {
+      if (payload.authorId === userId) return;
+      for (const command of payload.segments) {
+        applyCommand(command);
+      }
     });
 
     channel.bind("client-clear", (command: ClearCanvasCommand) => {
@@ -255,11 +269,30 @@ export default function PaintBoard({ roomId }: Props) {
     });
 
     return () => {
+      if (flushTimerRef.current) {
+        window.clearInterval(flushTimerRef.current);
+        flushTimerRef.current = null;
+      }
+      flushPendingSegments();
       pusher.unsubscribe(`presence-board-${roomId}`);
       pusher.disconnect();
       channelRef.current = null;
     };
-  }, [applyCommand, emitEvent, roomId, userId, userName]);
+  }, [applyCommand, emitEvent, flushPendingSegments, roomId, userId, userName]);
+
+  useEffect(() => {
+    // Keep event rate below provider limits by batching segments.
+    flushTimerRef.current = window.setInterval(() => {
+      flushPendingSegments();
+    }, 120);
+
+    return () => {
+      if (flushTimerRef.current) {
+        window.clearInterval(flushTimerRef.current);
+        flushTimerRef.current = null;
+      }
+    };
+  }, [flushPendingSegments]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -291,11 +324,7 @@ export default function PaintBoard({ roomId }: Props) {
         ts: Date.now()
       };
       applyCommand(command);
-
-      if (Date.now() - lastSentAtRef.current > 12) {
-        emitEvent("client-segment", command);
-        lastSentAtRef.current = Date.now();
-      }
+      pendingSegmentsRef.current.push(command);
 
       lastPointRef.current = nextPoint;
     };
@@ -303,6 +332,7 @@ export default function PaintBoard({ roomId }: Props) {
     const onPointerUp = (event: PointerEvent) => {
       drawingRef.current = false;
       lastPointRef.current = null;
+      flushPendingSegments();
       if (canvas.hasPointerCapture(event.pointerId)) {
         canvas.releasePointerCapture(event.pointerId);
       }
@@ -319,7 +349,7 @@ export default function PaintBoard({ roomId }: Props) {
       canvas.removeEventListener("pointerup", onPointerUp);
       canvas.removeEventListener("pointerleave", onPointerUp);
     };
-  }, [applyCommand, brushSize, color, emitEvent, getPointFromPointer, toolMode, userId]);
+  }, [applyCommand, brushSize, color, flushPendingSegments, getPointFromPointer, toolMode, userId]);
 
   const handleCopyLink = async () => {
     if (!shareUrl) return;
