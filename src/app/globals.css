@@ -1,0 +1,221 @@
+:root {
+  --bg: #f5f8ff;
+  --card: #ffffff;
+  --line: #dde3f3;
+  --ink: #1f2d3d;
+  --muted: #5f6f84;
+  --accent: #1d78f2;
+  --accent-strong: #135fcb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  font-family: "Segoe UI", "Avenir Next", sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 20% -10%, #dce7ff 0, transparent 45%),
+    radial-gradient(circle at 80% -20%, #d4fff1 0, transparent 45%),
+    var(--bg);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+.home {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.home-card {
+  width: min(640px, 100%);
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: 0 12px 44px rgba(26, 46, 89, 0.12);
+}
+
+.home-card h1 {
+  margin: 4px 0 10px;
+  font-size: clamp(28px, 4vw, 40px);
+  letter-spacing: -0.02em;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0 0 24px;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.home-actions {
+  display: grid;
+  gap: 12px;
+}
+
+.primary,
+.join-form button,
+.header-actions button,
+.toolbar button {
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary:hover,
+.join-form button:hover,
+.header-actions button:hover,
+.toolbar button:hover {
+  background: var(--accent-strong);
+}
+
+.join-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+
+.join-form input {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  outline: none;
+}
+
+.join-form input:focus {
+  border-color: var(--accent);
+}
+
+.board-page {
+  height: 100dvh;
+  padding: 14px;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.board-header,
+.toolbar {
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 14px;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 22px rgba(42, 62, 102, 0.08);
+}
+
+.title-area h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.title-area p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.header-actions a {
+  font-weight: 600;
+  color: var(--accent-strong);
+}
+
+.toolbar {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.tool-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-group label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.tool-group input[type="range"] {
+  width: 130px;
+}
+
+.mode-buttons button {
+  background: #eff4ff;
+  color: #20426f;
+}
+
+.mode-buttons button.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.canvas-container {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 0;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(56, 89, 134, 0.03);
+}
+
+.canvas-container canvas {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+@media (max-width: 720px) {
+  .home-card {
+    padding: 22px;
+    border-radius: 16px;
+  }
+
+  .board-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .join-form {
+    grid-template-columns: 1fr;
+  }
+}
